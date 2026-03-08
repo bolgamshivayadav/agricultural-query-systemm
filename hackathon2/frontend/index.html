@@ -1,0 +1,1070 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmassist - Agricultural AI Assistant</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+        * { font-family: 'Nunito', sans-serif; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        .slide-in { animation: slideIn 0.3s ease-out; }
+        .pulse-animation { animation: pulse 1.5s infinite; }
+        
+        .chat-bubble {
+            position: relative;
+            border-radius: 18px;
+        }
+        
+        .chat-bubble-user {
+            border-bottom-right-radius: 4px;
+        }
+        
+        .chat-bubble-ai {
+            border-bottom-left-radius: 4px;
+        }
+        
+        .category-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .category-btn {
+            transition: all 0.2s ease;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1d4a3;
+            border-radius: 3px;
+        }
+        
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50">
+  <div id="app-container" class="h-full w-full flex flex-col overflow-hidden"><!-- Header -->
+   <header id="header" class="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-4 py-4 shadow-lg flex-shrink-0">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
+     <div class="flex items-center gap-3">
+      <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+       <svg class="w-7 h-7" fill="currentColor" viewbox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+       </svg>
+      </div>
+      <div>
+       <h1 id="app-title" class="text-xl font-bold">🌾 Farmassist</h1>
+       <p class="text-green-100 text-sm">AI-Powered Agricultural Assistant</p>
+      </div>
+     </div>
+     <div class="flex items-center gap-2"><select id="language-select" class="bg-white/20 text-white border border-white/30 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"> <option value="en" class="text-gray-800">English</option> <option value="hi" class="text-gray-800">हिंदी</option> <option value="te" class="text-gray-800">తెలుగు</option> <option value="ta" class="text-gray-800">தமிழ்</option> </select> <button id="history-btn" class="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors" title="Query History">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+       </svg></button>
+     </div>
+    </div>
+   </header><!-- Main Content -->
+   <main class="flex-1 overflow-hidden flex flex-col max-w-4xl mx-auto w-full"><!-- Welcome Section -->
+    <div id="welcome-section" class="px-4 py-6 flex-shrink-0">
+     <div class="text-center mb-4">
+      <p id="welcome-message" class="text-gray-600 text-lg">Welcome! Ask me anything about farming, crops, pests, or government schemes.</p>
+     </div><!-- Category Quick Actions -->
+     <div class="grid grid-cols-2 md:grid-cols-4 gap-3"><button class="category-btn bg-white p-4 rounded-xl shadow-md border-2 border-green-100 hover:border-green-400" data-category="crops">
+       <div class="text-3xl mb-2">
+        🌱
+       </div>
+       <div class="font-semibold text-gray-700 text-sm">
+        Crops
+       </div></button> <button class="category-btn bg-white p-4 rounded-xl shadow-md border-2 border-orange-100 hover:border-orange-400" data-category="pests">
+       <div class="text-3xl mb-2">
+        🐛
+       </div>
+       <div class="font-semibold text-gray-700 text-sm">
+        Pests
+       </div></button> <button class="category-btn bg-white p-4 rounded-xl shadow-md border-2 border-blue-100 hover:border-blue-400" data-category="fertilizers">
+       <div class="text-3xl mb-2">
+        🧪
+       </div>
+       <div class="font-semibold text-gray-700 text-sm">
+        Fertilizers
+       </div></button> <button class="category-btn bg-white p-4 rounded-xl shadow-md border-2 border-purple-100 hover:border-purple-400" data-category="schemes">
+       <div class="text-3xl mb-2">
+        📋
+       </div>
+       <div class="font-semibold text-gray-700 text-sm">
+        Schemes
+       </div></button>
+     </div>
+    </div><!-- Chat Messages -->
+    <div id="chat-container" class="flex-1 overflow-y-auto px-4 pb-4 space-y-4"><!-- Messages will appear here -->
+    </div><!-- Input Area -->
+    <div class="flex-shrink-0 p-4 bg-white border-t border-gray-200">
+     <div class="max-w-4xl mx-auto">
+      <div class="flex gap-3">
+       <div class="flex-1 relative"><input type="text" id="question-input" placeholder="Ask your farming question..." class="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 transition-colors text-gray-700"> <button id="voice-btn" class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-green-600 transition-colors" title="Voice Input">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+         </svg></button>
+       </div><button id="send-btn" class="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"> <span>Ask</span>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+        </svg></button>
+      </div>
+      <div class="mt-2 flex flex-wrap gap-2"><span class="text-xs text-gray-500">Quick questions:</span> <button class="quick-question text-xs bg-gray-100 hover:bg-green-100 px-3 py-1 rounded-full text-gray-600 hover:text-green-700 transition-colors"> Why are my tomato leaves yellow? </button> <button class="quick-question text-xs bg-gray-100 hover:bg-green-100 px-3 py-1 rounded-full text-gray-600 hover:text-green-700 transition-colors"> Best fertilizer for wheat? </button> <button class="quick-question text-xs bg-gray-100 hover:bg-green-100 px-3 py-1 rounded-full text-gray-600 hover:text-green-700 transition-colors"> PM Kisan scheme details? </button>
+      </div>
+     </div>
+    </div>
+   </main><!-- History Modal -->
+   <div id="history-modal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[80%] overflow-hidden flex flex-col shadow-2xl">
+     <div class="p-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white flex justify-between items-center">
+      <h2 class="text-lg font-bold">📜 Query History</h2><button id="close-history" class="p-1 hover:bg-white/20 rounded-lg transition-colors">
+       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg></button>
+     </div>
+     <div id="history-list" class="flex-1 overflow-y-auto p-4 space-y-3"><!-- History items will appear here -->
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+        // ============================================
+        // FARMASSIST: Agricultural AI Query System
+        // ============================================
+
+        // Default Configuration
+        const defaultConfig = {
+            app_title: '🌾 Farmassist',
+            welcome_message: 'Welcome! Ask me anything about farming, crops, pests, or government schemes.',
+            placeholder_text: 'Ask your farming question...',
+            primary_color: '#16a34a',
+            secondary_color: '#ffffff',
+            text_color: '#374151',
+            accent_color: '#059669',
+            surface_color: '#f0fdf4'
+        };
+
+        // Application State
+        let queryHistory = [];
+        let currentLanguage = 'en';
+        let isProcessing = false;
+
+        // ============================================
+        // AGRICULTURAL KNOWLEDGE BASE (RAG Simulation)
+        // ============================================
+        
+        const knowledgeBase = {
+            crops: {
+                tomato: {
+                    yellowing: {
+                        causes: ['Nitrogen deficiency', 'Overwatering', 'Root rot', 'Pest infestation', 'Viral diseases'],
+                        solutions: [
+                            'Apply nitrogen-rich fertilizer like urea (46-0-0) at 2kg per 100 sqm',
+                            'Ensure proper drainage - water only when top 2 inches of soil is dry',
+                            'Check for root rot - if present, apply fungicide and improve drainage',
+                            'Inspect for aphids or whiteflies - use neem oil spray if found',
+                            'Remove severely affected plants to prevent spread'
+                        ],
+                        prevention: 'Maintain balanced NPK fertilization, practice crop rotation, use disease-resistant varieties'
+                    },
+                    diseases: ['Early blight', 'Late blight', 'Fusarium wilt', 'Bacterial spot'],
+                    bestPractices: 'Plant in well-drained soil, maintain 60-90cm spacing, stake plants for support'
+                },
+                wheat: {
+                    fertilizers: {
+                        recommended: ['DAP (18-46-0)', 'Urea (46-0-0)', 'MOP (0-0-60)'],
+                        schedule: [
+                            'Basal: 60kg DAP + 30kg MOP per acre at sowing',
+                            'First top-dress: 30kg Urea at 21 days (CRI stage)',
+                            'Second top-dress: 30kg Urea at 45 days (tillering)',
+                            'Third top-dress: 20kg Urea at flowering (optional)'
+                        ],
+                        organic: 'Apply 5-6 tonnes FYM or compost per acre before sowing'
+                    },
+                    irrigation: '4-6 irrigations at critical stages: CRI, tillering, jointing, flowering, grain filling',
+                    varieties: ['HD-2967', 'PBW-343', 'WH-1105', 'DBW-17']
+                },
+                rice: {
+                    pests: {
+                        stemBorer: {
+                            symptoms: 'Dead hearts in vegetative stage, white heads at flowering',
+                            control: [
+                                'Release Trichogramma parasitoids at 1 lakh/acre',
+                                'Apply Cartap hydrochloride 4G at 10kg/acre',
+                                'Light traps for moth monitoring',
+                                'Remove and destroy stubbles after harvest'
+                            ]
+                        },
+                        bph: {
+                            symptoms: 'Hopper burn, circular patches of drying plants',
+                            control: [
+                                'Avoid excess nitrogen fertilizer',
+                                'Maintain 20-25 hills/sqm spacing',
+                                'Spray Imidacloprid 17.8 SL at 3ml/10L water',
+                                'Preserve natural enemies like spiders'
+                            ]
+                        }
+                    },
+                    waterManagement: 'Maintain 2-5cm water during vegetative stage, drain 10 days before harvest'
+                },
+                cotton: {
+                    pests: ['Bollworm', 'Whitefly', 'Jassids', 'Aphids'],
+                    management: 'Use Bt cotton varieties, pheromone traps, IPM practices'
+                },
+                sugarcane: {
+                    planting: 'Plant in February-March or October, use 3-budded setts',
+                    fertilizers: '250kg N + 60kg P + 60kg K per hectare in split doses'
+                }
+            },
+            pests: {
+                general: {
+                    ipm: {
+                        cultural: ['Crop rotation', 'Resistant varieties', 'Proper spacing', 'Timely sowing'],
+                        mechanical: ['Light traps', 'Pheromone traps', 'Yellow sticky traps', 'Hand picking'],
+                        biological: ['Trichogramma', 'Chrysoperla', 'NPV', 'Bt formulations'],
+                        chemical: 'Use only as last resort, follow recommended doses, maintain waiting period'
+                    }
+                },
+                locusts: {
+                    control: [
+                        'Report to local agriculture office immediately',
+                        'Use vehicle-mounted ULV sprayers with Malathion',
+                        'Community-level coordinated action',
+                        'Protect young crops first'
+                    ]
+                }
+            },
+            fertilizers: {
+                organic: {
+                    types: ['FYM (Farm Yard Manure)', 'Compost', 'Vermicompost', 'Green manure', 'Biofertilizers'],
+                    benefits: 'Improves soil structure, increases water retention, provides slow-release nutrients',
+                    application: 'Apply 10-15 tonnes FYM per hectare, 2-3 weeks before sowing'
+                },
+                chemical: {
+                    npk: {
+                        nitrogen: 'Promotes leaf growth - Urea, Ammonium sulfate',
+                        phosphorus: 'Root development and flowering - DAP, SSP',
+                        potassium: 'Disease resistance and quality - MOP, SOP'
+                    },
+                    micronutrients: ['Zinc sulfate', 'Borax', 'Ferrous sulfate', 'Manganese sulfate']
+                },
+                soilTesting: 'Get soil tested every 2-3 years from government soil testing labs (free service)'
+            },
+            schemes: {
+                pmkisan: {
+                    name: 'PM-KISAN (Pradhan Mantri Kisan Samman Nidhi)',
+                    benefit: '₹6000 per year in 3 installments of ₹2000 each',
+                    eligibility: 'All landholding farmer families',
+                    documents: ['Aadhaar card', 'Bank account', 'Land records'],
+                    apply: 'Visit pmkisan.gov.in or nearest CSC center'
+                },
+                pmfby: {
+                    name: 'PMFBY (Pradhan Mantri Fasal Bima Yojana)',
+                    benefit: 'Crop insurance at 1.5-5% premium, rest paid by government',
+                    coverage: 'Natural calamities, pests, diseases',
+                    apply: 'Through bank, CSC, or insurance company before sowing deadline'
+                },
+                kkc: {
+                    name: 'Kisan Credit Card',
+                    benefit: 'Credit up to ₹3 lakh at 4% interest (with subsidy)',
+                    features: ['Flexible withdrawal', 'No collateral up to ₹1.6 lakh', 'Personal accident insurance'],
+                    apply: 'Apply at any bank with land documents and Aadhaar'
+                },
+                soilHealth: {
+                    name: 'Soil Health Card Scheme',
+                    benefit: 'Free soil testing and fertilizer recommendations',
+                    apply: 'Contact local agriculture office or visit soilhealth.dac.gov.in'
+                },
+                enam: {
+                    name: 'e-NAM (National Agriculture Market)',
+                    benefit: 'Online trading platform for better prices',
+                    apply: 'Register at enam.gov.in with Aadhaar and bank details'
+                },
+                pmksy: {
+                    name: 'PM Krishi Sinchai Yojana',
+                    benefit: 'Subsidy on micro-irrigation (drip/sprinkler) - up to 55-90%',
+                    apply: 'Apply through state agriculture department'
+                }
+            },
+            weather: {
+                monsoon: 'Kharif sowing: June-July, prepare fields before onset',
+                winter: 'Rabi sowing: October-November, ensure irrigation availability',
+                summer: 'Zaid crops possible with assured irrigation'
+            }
+        };
+
+        // ============================================
+        // MULTILINGUAL SUPPORT
+        // ============================================
+        
+        const translations = {
+            hi: {
+                welcome: 'स्वागत है! खेती, फसलों, कीटों या सरकारी योजनाओं के बारे में कुछ भी पूछें।',
+                placeholder: 'अपना कृषि सवाल पूछें...',
+                crops: 'फसलें',
+                pests: 'कीट',
+                fertilizers: 'उर्वरक',
+                schemes: 'योजनाएं',
+                ask: 'पूछें',
+                history: 'इतिहास',
+                helpful: 'क्या यह मददगार था?',
+                yes: 'हां',
+                no: 'नहीं',
+                loading: 'जवाब खोज रहे हैं...',
+                noHistory: 'अभी तक कोई सवाल नहीं पूछा गया'
+            },
+            te: {
+                welcome: 'స్వాగతం! వ్యవసాయం, పంటలు, చీడపీడలు లేదా ప్రభుత్వ పథకాల గురించి ఏదైనా అడగండి।',
+                placeholder: 'మీ వ్యవసాయ ప్రశ్న అడగండి...',
+                crops: 'పంటలు',
+                pests: 'చీడపీడలు',
+                fertilizers: 'ఎరువులు',
+                schemes: 'పథకాలు',
+                ask: 'అడగండి',
+                history: 'చరిత్ర',
+                helpful: 'ఇది సహాయకరంగా ఉందా?',
+                yes: 'అవును',
+                no: 'కాదు',
+                loading: 'సమాధానం కనుగొంటున్నాము...',
+                noHistory: 'ఇంకా ప్రశ్నలు అడగలేదు'
+            },
+            ta: {
+                welcome: 'வரவேற்கிறோம்! விவசாயம், பயிர்கள், பூச்சிகள் அல்லது அரசு திட்டங்கள் பற்றி எதையும் கேளுங்கள்.',
+                placeholder: 'உங்கள் விவசாய கேள்வியைக் கேளுங்கள்...',
+                crops: 'பயிர்கள்',
+                pests: 'பூச்சிகள்',
+                fertilizers: 'உரங்கள்',
+                schemes: 'திட்டங்கள்',
+                ask: 'கேளுங்கள்',
+                history: 'வரலாறு',
+                helpful: 'இது உதவியாக இருந்ததா?',
+                yes: 'ஆம்',
+                no: 'இல்லை',
+                loading: 'பதிலைக் கண்டறிகிறது...',
+                noHistory: 'இன்னும் கேள்விகள் கேட்கவில்லை'
+            }
+        };
+
+        // ============================================
+        // RAG-BASED QUERY PROCESSOR
+        // ============================================
+
+        function detectQueryCategory(query) {
+            const queryLower = query.toLowerCase();
+            
+            const categoryKeywords = {
+                crops: ['crop', 'plant', 'grow', 'seed', 'harvest', 'yield', 'tomato', 'wheat', 'rice', 'cotton', 'sugarcane', 'vegetable', 'fruit', 'leaf', 'leaves', 'पौधा', 'फसल', 'पत्ते', 'పంట', 'பயிர்'],
+                pests: ['pest', 'insect', 'disease', 'fungus', 'virus', 'rot', 'blight', 'wilt', 'attack', 'damage', 'control', 'spray', 'कीट', 'रोग', 'చీడ', 'பூச்சி', 'yellow', 'brown', 'spot', 'hole'],
+                fertilizers: ['fertilizer', 'manure', 'compost', 'nutrient', 'npk', 'urea', 'dap', 'organic', 'soil', 'खाद', 'उर्वरक', 'ఎరువు', 'உரம்'],
+                schemes: ['scheme', 'government', 'subsidy', 'loan', 'insurance', 'pm kisan', 'pmfby', 'kcc', 'credit', 'support', 'benefit', 'apply', 'योजना', 'सरकार', 'పథకం', 'திட்டம்']
+            };
+            
+            for (const [category, keywords] of Object.entries(categoryKeywords)) {
+                if (keywords.some(keyword => queryLower.includes(keyword))) {
+                    return category;
+                }
+            }
+            
+            return 'general';
+        }
+
+        function retrieveRelevantContext(query, category) {
+            const contexts = [];
+            const queryLower = query.toLowerCase();
+            
+            // Crop-specific retrieval
+            if (category === 'crops' || category === 'pests') {
+                if (queryLower.includes('tomato') || queryLower.includes('टमाटर')) {
+                    if (queryLower.includes('yellow') || queryLower.includes('पीला') || queryLower.includes('leaf') || queryLower.includes('पत्त')) {
+                        contexts.push({
+                            type: 'crop_issue',
+                            crop: 'tomato',
+                            issue: 'yellowing',
+                            data: knowledgeBase.crops.tomato.yellowing
+                        });
+                    }
+                }
+                
+                if (queryLower.includes('wheat') || queryLower.includes('गेहूं')) {
+                    contexts.push({
+                        type: 'crop_info',
+                        crop: 'wheat',
+                        data: knowledgeBase.crops.wheat
+                    });
+                }
+                
+                if (queryLower.includes('rice') || queryLower.includes('धान') || queryLower.includes('चावल')) {
+                    if (queryLower.includes('pest') || queryLower.includes('borer') || queryLower.includes('कीट')) {
+                        contexts.push({
+                            type: 'pest_info',
+                            crop: 'rice',
+                            data: knowledgeBase.crops.rice.pests
+                        });
+                    }
+                }
+            }
+            
+            // Fertilizer retrieval
+            if (category === 'fertilizers' || queryLower.includes('fertilizer') || queryLower.includes('खाद')) {
+                if (queryLower.includes('wheat') || queryLower.includes('गेहूं')) {
+                    contexts.push({
+                        type: 'fertilizer_recommendation',
+                        crop: 'wheat',
+                        data: knowledgeBase.crops.wheat.fertilizers
+                    });
+                }
+                
+                if (queryLower.includes('organic') || queryLower.includes('जैविक')) {
+                    contexts.push({
+                        type: 'organic_fertilizers',
+                        data: knowledgeBase.fertilizers.organic
+                    });
+                }
+                
+                contexts.push({
+                    type: 'fertilizer_general',
+                    data: knowledgeBase.fertilizers
+                });
+            }
+            
+            // Scheme retrieval
+            if (category === 'schemes') {
+                if (queryLower.includes('pm kisan') || queryLower.includes('पीएम किसान') || queryLower.includes('kisan')) {
+                    contexts.push({
+                        type: 'scheme',
+                        data: knowledgeBase.schemes.pmkisan
+                    });
+                }
+                
+                if (queryLower.includes('insurance') || queryLower.includes('बीमा') || queryLower.includes('pmfby') || queryLower.includes('fasal')) {
+                    contexts.push({
+                        type: 'scheme',
+                        data: knowledgeBase.schemes.pmfby
+                    });
+                }
+                
+                if (queryLower.includes('credit') || queryLower.includes('loan') || queryLower.includes('kcc') || queryLower.includes('ऋण')) {
+                    contexts.push({
+                        type: 'scheme',
+                        data: knowledgeBase.schemes.kkc
+                    });
+                }
+                
+                if (queryLower.includes('soil') || queryLower.includes('मिट्टी')) {
+                    contexts.push({
+                        type: 'scheme',
+                        data: knowledgeBase.schemes.soilHealth
+                    });
+                }
+                
+                if (queryLower.includes('irrigation') || queryLower.includes('water') || queryLower.includes('drip') || queryLower.includes('सिंचाई')) {
+                    contexts.push({
+                        type: 'scheme',
+                        data: knowledgeBase.schemes.pmksy
+                    });
+                }
+                
+                // If no specific scheme matched, return all major schemes
+                if (contexts.length === 0) {
+                    contexts.push({
+                        type: 'all_schemes',
+                        data: knowledgeBase.schemes
+                    });
+                }
+            }
+            
+            // IPM for pest control
+            if (queryLower.includes('ipm') || queryLower.includes('integrated') || queryLower.includes('organic control')) {
+                contexts.push({
+                    type: 'ipm',
+                    data: knowledgeBase.pests.general.ipm
+                });
+            }
+            
+            return contexts;
+        }
+
+        function generateResponse(query, contexts, category) {
+            let response = '';
+            
+            if (contexts.length === 0) {
+                return generateGeneralResponse(query, category);
+            }
+            
+            for (const context of contexts) {
+                switch (context.type) {
+                    case 'crop_issue':
+                        response += `## 🍅 ${context.crop.charAt(0).toUpperCase() + context.crop.slice(1)} - ${context.issue.charAt(0).toUpperCase() + context.issue.slice(1)} Leaves\n\n`;
+                        response += `**Possible Causes:**\n`;
+                        context.data.causes.forEach((cause, i) => {
+                            response += `${i + 1}. ${cause}\n`;
+                        });
+                        response += `\n**Solutions:**\n`;
+                        context.data.solutions.forEach((solution, i) => {
+                            response += `${i + 1}. ${solution}\n`;
+                        });
+                        response += `\n**Prevention:** ${context.data.prevention}\n`;
+                        break;
+                        
+                    case 'fertilizer_recommendation':
+                        response += `## 🌾 Fertilizer Recommendations for ${context.crop.charAt(0).toUpperCase() + context.crop.slice(1)}\n\n`;
+                        response += `**Recommended Fertilizers:** ${context.data.recommended.join(', ')}\n\n`;
+                        response += `**Application Schedule:**\n`;
+                        context.data.schedule.forEach((step, i) => {
+                            response += `${i + 1}. ${step}\n`;
+                        });
+                        response += `\n**Organic Option:** ${context.data.organic}\n`;
+                        break;
+                        
+                    case 'scheme':
+                        response += `## 📋 ${context.data.name}\n\n`;
+                        response += `**Benefit:** ${context.data.benefit}\n\n`;
+                        if (context.data.eligibility) {
+                            response += `**Eligibility:** ${context.data.eligibility}\n\n`;
+                        }
+                        if (context.data.documents) {
+                            response += `**Required Documents:** ${context.data.documents.join(', ')}\n\n`;
+                        }
+                        if (context.data.features) {
+                            response += `**Features:**\n`;
+                            context.data.features.forEach(f => response += `• ${f}\n`);
+                            response += '\n';
+                        }
+                        if (context.data.coverage) {
+                            response += `**Coverage:** ${context.data.coverage}\n\n`;
+                        }
+                        response += `**How to Apply:** ${context.data.apply}\n`;
+                        break;
+                        
+                    case 'all_schemes':
+                        response += `## 📋 Major Government Schemes for Farmers\n\n`;
+                        Object.values(context.data).forEach(scheme => {
+                            response += `### ${scheme.name}\n`;
+                            response += `**Benefit:** ${scheme.benefit}\n`;
+                            response += `**Apply:** ${scheme.apply}\n\n`;
+                        });
+                        break;
+                        
+                    case 'pest_info':
+                        response += `## 🐛 Pest Management for ${context.crop.charAt(0).toUpperCase() + context.crop.slice(1)}\n\n`;
+                        if (context.data.stemBorer) {
+                            response += `### Stem Borer\n`;
+                            response += `**Symptoms:** ${context.data.stemBorer.symptoms}\n`;
+                            response += `**Control Measures:**\n`;
+                            context.data.stemBorer.control.forEach(c => response += `• ${c}\n`);
+                            response += '\n';
+                        }
+                        if (context.data.bph) {
+                            response += `### Brown Plant Hopper (BPH)\n`;
+                            response += `**Symptoms:** ${context.data.bph.symptoms}\n`;
+                            response += `**Control Measures:**\n`;
+                            context.data.bph.control.forEach(c => response += `• ${c}\n`);
+                        }
+                        break;
+                        
+                    case 'organic_fertilizers':
+                        response += `## 🌿 Organic Fertilizers\n\n`;
+                        response += `**Types:** ${context.data.types.join(', ')}\n\n`;
+                        response += `**Benefits:** ${context.data.benefits}\n\n`;
+                        response += `**Application:** ${context.data.application}\n`;
+                        break;
+                        
+                    case 'ipm':
+                        response += `## 🛡️ Integrated Pest Management (IPM)\n\n`;
+                        response += `**Cultural Methods:**\n`;
+                        context.data.cultural.forEach(m => response += `• ${m}\n`);
+                        response += `\n**Mechanical Methods:**\n`;
+                        context.data.mechanical.forEach(m => response += `• ${m}\n`);
+                        response += `\n**Biological Methods:**\n`;
+                        context.data.biological.forEach(m => response += `• ${m}\n`);
+                        response += `\n**Chemical Control:** ${context.data.chemical}\n`;
+                        break;
+                }
+            }
+            
+            return response || generateGeneralResponse(query, category);
+        }
+
+        function generateGeneralResponse(query, category) {
+            const responses = {
+                crops: `## 🌱 Crop Information\n\nFor specific crop guidance, please mention:\n• Crop name (wheat, rice, tomato, etc.)\n• Issue you're facing (yellowing, wilting, low yield)\n• Your location and season\n\n**General Tips:**\n• Use quality certified seeds\n• Follow recommended spacing\n• Maintain proper irrigation\n• Get soil tested before sowing`,
+                
+                pests: `## 🐛 Pest Management Guidance\n\nFor pest control advice, please share:\n• Crop affected\n• Symptoms observed\n• Stage of crop\n\n**IPM Principles:**\n1. Prevention through resistant varieties\n2. Regular field monitoring\n3. Biological control first\n4. Chemical control as last resort`,
+                
+                fertilizers: `## 🧪 Fertilizer Guidance\n\nFor fertilizer recommendations, I need:\n• Crop name\n• Soil type\n• Growth stage\n\n**General NPK Guide:**\n• N (Nitrogen) - Leaf growth\n• P (Phosphorus) - Root & flower\n• K (Potassium) - Overall health\n\n**Tip:** Get free soil testing from government labs!`,
+                
+                schemes: `## 📋 Government Schemes for Farmers\n\n**Major Schemes:**\n1. **PM-KISAN** - ₹6000/year direct transfer\n2. **PMFBY** - Crop insurance at low premium\n3. **KCC** - Credit at 4% interest\n4. **Soil Health Card** - Free soil testing\n5. **e-NAM** - Online market platform\n\nVisit your nearest CSC or agriculture office for registration.`,
+                
+                general: `## 🌾 How Can I Help?\n\nI can assist you with:\n\n🌱 **Crops** - Planting, care, diseases\n🐛 **Pests** - Identification & control\n🧪 **Fertilizers** - Recommendations & schedule\n📋 **Schemes** - Government benefits & application\n\nPlease ask a specific question for detailed guidance!`
+            };
+            
+            return responses[category] || responses.general;
+        }
+
+        // ============================================
+        // CHAT INTERFACE FUNCTIONS
+        // ============================================
+
+        function createMessageBubble(content, isUser, isLoading = false) {
+            const bubble = document.createElement('div');
+            bubble.className = `flex ${isUser ? 'justify-end' : 'justify-start'} fade-in`;
+            
+            const innerContent = isLoading ? `
+                <div class="typing-indicator flex items-center gap-1">
+                    <span class="bg-green-500"></span>
+                    <span class="bg-green-500"></span>
+                    <span class="bg-green-500"></span>
+                </div>
+            ` : (isUser ? escapeHtml(content) : formatMarkdown(content));
+            
+            bubble.innerHTML = `
+                <div class="max-w-[85%] ${isUser ? 'chat-bubble-user bg-gradient-to-r from-green-500 to-emerald-600 text-white' : 'chat-bubble-ai bg-white shadow-md border border-gray-100 text-gray-700'} chat-bubble px-4 py-3">
+                    ${!isUser ? '<div class="flex items-center gap-2 mb-2 pb-2 border-b border-gray-100"><span class="text-lg">🌾</span><span class="font-semibold text-green-700">Farmassist</span></div>' : ''}
+                    <div class="${isUser ? '' : 'prose prose-sm max-w-none'}">${innerContent}</div>
+                </div>
+            `;
+            
+            return bubble;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatMarkdown(text) {
+            return text
+                .replace(/## (.*?)$/gm, '<h3 class="text-lg font-bold text-green-700 mb-2">$1</h3>')
+                .replace(/### (.*?)$/gm, '<h4 class="font-semibold text-green-600 mt-3 mb-1">$1</h4>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+                .replace(/^\d+\. (.*?)$/gm, '<div class="ml-4 mb-1">• $1</div>')
+                .replace(/^• (.*?)$/gm, '<div class="ml-4 mb-1">◦ $1</div>')
+                .replace(/\n\n/g, '</p><p class="mb-2">')
+                .replace(/\n/g, '<br>');
+        }
+
+        function addFeedbackButtons(messageElement, queryId) {
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = 'mt-3 pt-2 border-t border-gray-100 flex items-center gap-2';
+            feedbackDiv.innerHTML = `
+                <span class="text-xs text-gray-500">Was this helpful?</span>
+                <button class="feedback-btn text-xs px-2 py-1 rounded bg-green-100 hover:bg-green-200 text-green-700 transition-colors" data-helpful="true">
+                    👍 Yes
+                </button>
+                <button class="feedback-btn text-xs px-2 py-1 rounded bg-red-100 hover:bg-red-200 text-red-700 transition-colors" data-helpful="false">
+                    👎 No
+                </button>
+            `;
+            
+            const bubbleContent = messageElement.querySelector('.chat-bubble-ai');
+            if (bubbleContent) {
+                bubbleContent.appendChild(feedbackDiv);
+                
+                feedbackDiv.querySelectorAll('.feedback-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const helpful = btn.dataset.helpful === 'true';
+                        await recordFeedback(queryId, helpful);
+                        feedbackDiv.innerHTML = `<span class="text-xs text-gray-500">Thank you for your feedback! ${helpful ? '😊' : 'We\'ll improve!'}</span>`;
+                    });
+                });
+            }
+        }
+
+        async function recordFeedback(queryId, helpful) {
+            const query = queryHistory.find(q => q.id === queryId);
+            if (query && window.dataSdk) {
+                query.helpful = helpful;
+                const result = await window.dataSdk.update(query);
+                if (!result.isOk) {
+                    console.error('Failed to update feedback');
+                }
+            }
+        }
+
+        // ============================================
+        // MAIN QUERY PROCESSING
+        // ============================================
+
+        async function processQuery(question) {
+            if (isProcessing || !question.trim()) return;
+            
+            isProcessing = true;
+            const sendBtn = document.getElementById('send-btn');
+            const input = document.getElementById('question-input');
+            
+            sendBtn.disabled = true;
+            input.disabled = true;
+            
+            const chatContainer = document.getElementById('chat-container');
+            
+            // Add user message
+            const userBubble = createMessageBubble(question, true);
+            chatContainer.appendChild(userBubble);
+            
+            // Add loading indicator
+            const loadingBubble = createMessageBubble('', false, true);
+            chatContainer.appendChild(loadingBubble);
+            
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Simulate processing delay
+            await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 700));
+            
+            // Process query
+            const category = detectQueryCategory(question);
+            const contexts = retrieveRelevantContext(question, category);
+            const answer = generateResponse(question, contexts, category);
+            
+            // Remove loading indicator
+            loadingBubble.remove();
+            
+            // Add AI response
+            const aiBubble = createMessageBubble(answer, false);
+            chatContainer.appendChild(aiBubble);
+            
+            // Generate unique ID for query
+            const queryId = 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            
+            // Save to history
+            const queryRecord = {
+                id: queryId,
+                question: question,
+                answer: answer,
+                language: currentLanguage,
+                category: category,
+                timestamp: new Date().toISOString(),
+                helpful: null
+            };
+            
+            // Save to Data SDK
+            if (window.dataSdk) {
+                if (queryHistory.length >= 999) {
+                    console.warn('Query history limit reached');
+                } else {
+                    const result = await window.dataSdk.create(queryRecord);
+                    if (!result.isOk) {
+                        console.error('Failed to save query');
+                    }
+                }
+            }
+            
+            // Add feedback buttons
+            addFeedbackButtons(aiBubble, queryId);
+            
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Reset input
+            input.value = '';
+            input.disabled = false;
+            sendBtn.disabled = false;
+            isProcessing = false;
+            input.focus();
+        }
+
+        // ============================================
+        // HISTORY MODAL
+        // ============================================
+
+        function updateHistoryModal() {
+            const historyList = document.getElementById('history-list');
+            
+            if (queryHistory.length === 0) {
+                historyList.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <div class="text-4xl mb-3">📭</div>
+                        <p>No queries yet. Start asking questions!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort by timestamp descending
+            const sortedHistory = [...queryHistory].sort((a, b) => 
+                new Date(b.timestamp) - new Date(a.timestamp)
+            );
+            
+            historyList.innerHTML = sortedHistory.map(query => {
+                const date = new Date(query.timestamp);
+                const timeStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                const categoryEmoji = {
+                    crops: '🌱',
+                    pests: '🐛',
+                    fertilizers: '🧪',
+                    schemes: '📋',
+                    general: '❓'
+                }[query.category] || '❓';
+                
+                return `
+                    <div class="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors cursor-pointer history-item" data-question="${escapeHtml(query.question)}">
+                        <div class="flex items-start gap-3">
+                            <span class="text-2xl">${categoryEmoji}</span>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-medium text-gray-800 truncate">${escapeHtml(query.question)}</p>
+                                <p class="text-xs text-gray-500 mt-1">${timeStr}</p>
+                            </div>
+                            ${query.helpful !== null ? `<span class="text-lg">${query.helpful ? '👍' : '👎'}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Add click handlers for history items
+            historyList.querySelectorAll('.history-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.getElementById('question-input').value = item.dataset.question;
+                    document.getElementById('history-modal').classList.add('hidden');
+                    document.getElementById('history-modal').classList.remove('flex');
+                });
+            });
+        }
+
+        // ============================================
+        // ELEMENT SDK INTEGRATION
+        // ============================================
+
+        async function initializeApp() {
+            // Initialize Element SDK
+            if (window.elementSdk) {
+                window.elementSdk.init({
+                    defaultConfig,
+                    onConfigChange: async (config) => {
+                        // Update title
+                        const titleEl = document.getElementById('app-title');
+                        if (titleEl) {
+                            titleEl.textContent = config.app_title || defaultConfig.app_title;
+                        }
+                        
+                        // Update welcome message
+                        const welcomeEl = document.getElementById('welcome-message');
+                        if (welcomeEl) {
+                            welcomeEl.textContent = config.welcome_message || defaultConfig.welcome_message;
+                        }
+                        
+                        // Update placeholder
+                        const inputEl = document.getElementById('question-input');
+                        if (inputEl) {
+                            inputEl.placeholder = config.placeholder_text || defaultConfig.placeholder_text;
+                        }
+                        
+                        // Update colors
+                        const header = document.getElementById('header');
+                        if (header && config.primary_color) {
+                            header.style.background = `linear-gradient(to right, ${config.primary_color}, ${config.accent_color || config.primary_color})`;
+                        }
+                    },
+                    mapToCapabilities: (config) => ({
+                        recolorables: [
+                            {
+                                get: () => config.primary_color || defaultConfig.primary_color,
+                                set: (value) => window.elementSdk.setConfig({ primary_color: value })
+                            },
+                            {
+                                get: () => config.secondary_color || defaultConfig.secondary_color,
+                                set: (value) => window.elementSdk.setConfig({ secondary_color: value })
+                            },
+                            {
+                                get: () => config.text_color || defaultConfig.text_color,
+                                set: (value) => window.elementSdk.setConfig({ text_color: value })
+                            },
+                            {
+                                get: () => config.accent_color || defaultConfig.accent_color,
+                                set: (value) => window.elementSdk.setConfig({ accent_color: value })
+                            },
+                            {
+                                get: () => config.surface_color || defaultConfig.surface_color,
+                                set: (value) => window.elementSdk.setConfig({ surface_color: value })
+                            }
+                        ],
+                        borderables: [],
+                        fontEditable: undefined,
+                        fontSizeable: undefined
+                    }),
+                    mapToEditPanelValues: (config) => new Map([
+                        ['app_title', config.app_title || defaultConfig.app_title],
+                        ['welcome_message', config.welcome_message || defaultConfig.welcome_message],
+                        ['placeholder_text', config.placeholder_text || defaultConfig.placeholder_text]
+                    ])
+                });
+            }
+
+            // Initialize Data SDK
+            if (window.dataSdk) {
+                const dataHandler = {
+                    onDataChanged(data) {
+                        queryHistory = data;
+                        updateHistoryModal();
+                    }
+                };
+                
+                const result = await window.dataSdk.init(dataHandler);
+                if (!result.isOk) {
+                    console.error('Failed to initialize Data SDK');
+                }
+            }
+
+            // Set up event listeners
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            // Send button
+            document.getElementById('send-btn').addEventListener('click', () => {
+                const question = document.getElementById('question-input').value.trim();
+                if (question) {
+                    processQuery(question);
+                }
+            });
+
+            // Enter key
+            document.getElementById('question-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const question = e.target.value.trim();
+                    if (question) {
+                        processQuery(question);
+                    }
+                }
+            });
+
+            // Quick questions
+            document.querySelectorAll('.quick-question').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const question = btn.textContent.trim();
+                    document.getElementById('question-input').value = question;
+                    processQuery(question);
+                });
+            });
+
+            // Category buttons
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const category = btn.dataset.category;
+                    const categoryQuestions = {
+                        crops: 'What are the best practices for growing wheat?',
+                        pests: 'How to control pests in rice crop?',
+                        fertilizers: 'What fertilizers should I use for vegetables?',
+                        schemes: 'What government schemes are available for farmers?'
+                    };
+                    document.getElementById('question-input').value = categoryQuestions[category] || '';
+                    processQuery(categoryQuestions[category]);
+                });
+            });
+
+            // Language selector
+            document.getElementById('language-select').addEventListener('change', (e) => {
+                currentLanguage = e.target.value;
+                updateUILanguage(currentLanguage);
+            });
+
+            // History modal
+            document.getElementById('history-btn').addEventListener('click', () => {
+                updateHistoryModal();
+                document.getElementById('history-modal').classList.remove('hidden');
+                document.getElementById('history-modal').classList.add('flex');
+            });
+
+            document.getElementById('close-history').addEventListener('click', () => {
+                document.getElementById('history-modal').classList.add('hidden');
+                document.getElementById('history-modal').classList.remove('flex');
+            });
+
+            document.getElementById('history-modal').addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    document.getElementById('history-modal').classList.add('hidden');
+                    document.getElementById('history-modal').classList.remove('flex');
+                }
+            });
+
+            // Voice input (Web Speech API)
+            document.getElementById('voice-btn').addEventListener('click', () => {
+                if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    const recognition = new SpeechRecognition();
+                    recognition.lang = currentLanguage === 'hi' ? 'hi-IN' : 
+                                       currentLanguage === 'te' ? 'te-IN' : 
+                                       currentLanguage === 'ta' ? 'ta-IN' : 'en-US';
+                    recognition.interimResults = false;
+                    
+                    const voiceBtn = document.getElementById('voice-btn');
+                    voiceBtn.classList.add('text-red-500');
+                    voiceBtn.innerHTML = `<svg class="w-5 h-5 pulse-animation" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>`;
+                    
+                    recognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        document.getElementById('question-input').value = transcript;
+                        voiceBtn.classList.remove('text-red-500');
+                        voiceBtn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>`;
+                    };
+                    
+                    recognition.onerror = () => {
+                        voiceBtn.classList.remove('text-red-500');
+                        voiceBtn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>`;
+                    };
+                    
+                    recognition.start();
+                }
+            });
+        }
+
+        function updateUILanguage(lang) {
+            if (lang === 'en') return;
+            
+            const t = translations[lang];
+            if (!t) return;
+            
+            document.getElementById('welcome-message').textContent = t.welcome;
+            document.getElementById('question-input').placeholder = t.placeholder;
+            
+            const categories = document.querySelectorAll('.category-btn');
+            const categoryTexts = [t.crops, t.pests, t.fertilizers, t.schemes];
+            categories.forEach((btn, i) => {
+                const textDiv = btn.querySelector('div:last-child');
+                if (textDiv && categoryTexts[i]) {
+                    textDiv.textContent = categoryTexts[i];
+                }
+            });
+        }
+
+        // Initialize on load
+        initializeApp();
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d8bd55377729a87',t:'MTc3MjkwOTkyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
